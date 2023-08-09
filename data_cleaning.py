@@ -298,6 +298,20 @@ class DataCleaning():
     def clean_date_data(self, df):
         df = df.replace('NULL', np.nan)
         df = df.dropna(how='all')
+        # rows where any time/date columns contain alphabetical characters:
+        columns_to_check = ['timestamp', 'month', 'year', 'day']
+        mask = (
+            df[columns_to_check]
+            .applymap(lambda x: any(char.isalpha() for char in str(x)))
+            .any(axis=1)
+        )
+        df[mask]
+        df.drop(df[mask].index, inplace=True)
+        # make datetime column (needs 2 steps)
+        date_components = pd.to_datetime(df[['year', 'month', 'day']])
+        df['combined_datetime'] = (
+            date_components + pd.to_timedelta(df['timestamp'])
+        )
         print(f"df.shape:               {df.shape}")
         print(f"unique values in index: {df.index.nunique()}")
         print(f"number duplicated rows: {df.duplicated().sum()}")
