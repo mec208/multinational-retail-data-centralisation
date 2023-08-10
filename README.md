@@ -11,9 +11,9 @@ Three classes were developed, to carry out the necessary tasks related to proces
 
 `DatabaseConnector` 
 
-This includes methods at two stages of the data processing pipeline: 
-- 1. to connect to source databases containing the raw data, allowing exploration of the tables in the source database and extraction of the data (see below)
-- 2. to upload the cleaned data to the PostgreSQL database.
+This includes methods for two stages of the data processing pipeline: 
+1. connection to source databases containing the raw data, allowing exploration of the tables in the source database and extraction of the data (see below)
+2. uploading cleaned data to the PostgreSQL database.
 
 &nbsp;
 
@@ -31,9 +31,9 @@ All extraction methods return a Pandas DataFrame for further processing.
 
 `DataCleaning`
 
-Methods to clean raw data prior to uploading.  
+This class contains methods to clean raw data prior to uploading.  
 
-General tasks include identifying duplicate rows, identifying placeholders in the data represening missing values, identifying rows missing data, and removing rows containing unambiguous data entry errors.  
+General tasks include identifying duplicate rows, identifying placeholders in the data representing missing values, identifying and removing rows where all columns are missing data, and removing rows containing unambiguous data entry errors.  
 
 Details of data cleaning specific to different data sources are given in the relevant sections below.
 
@@ -47,18 +47,18 @@ The `read_rds_table` method in the `DataExtractor` was used to extract the data 
 
 Key `DataCleaning` tasks for user data include:
 - cleaning and processsing of dates into a standard format
-- processing of address data to remove line separation characters that had not formatted correctly in the text field
-- ?postcodes?
 - cleaning and standardisation of phone numbers from three countries into a standard format (separating country prefix and the in-country number)
+- processing of address data to remove line separation characters that had not formatted correctly in the text field
+- extraction of postcodes / zipcodes from the address column to a separate column, accounting for country-specific conventions.
 
 ## Card Data
-Card data was available from a PDF held in an Amazon S3 bucket (and available directly through the URL).
+Card data was available from a PDF held in an Amazon S3 bucket (and available directly through a URL).
 
 The `retrieve_pdf_data` method in the `DataExtractor` extract the data from each page of the PDF using the `tabula` module, and combine these into a single DataFrame.  
 
 Key `DataCleaning` tasks for card data include:
 - separation of incorrectly concatenated data (card number and expiry date) back into separate columns
-- removal of padding characters from card numbers
+- removal of text characters and white space used to pad card numbers, to allow conversion of the column to numeric.
 
 
 ## Store Data
@@ -66,12 +66,12 @@ Store data was available from an API.
 
 Two get methods of the API were used within the `DataExtractor`.  These use the `requests` module.
 
-The first get method, implemented by the method `list_number_of_stores` returns the number of stores. The second method `retrieve_stores_data` returns the data for each store, using the response from the first method to parameterise a loop, and then combines these into a single DataFrame.
+The first get method, implemented by the method `list_number_of_stores` returns the number of stores. The second method `retrieve_stores_data` returns the data for each store, using the response from the first method to parameterise a loop, and then combine these into a single DataFrame.
 
 Key `DataCleaning` tasks for store data include:
 - correction of latitude and longitude data for each store, and conversion of these to numeric variables.
 - processing of opening date from text into a date variable with standardised formatting
-- extraction of store postal code/zipcode from the address string, accounting for country-specific conventions. 
+- extraction of postcodes / zipcodes from the address column to a separate column, accounting for country-specific conventions.
 
 
 ## Product Data
@@ -84,7 +84,7 @@ Generic `DataCleaning` tasks are handled with `clean_products_data`.
 A specific cleaning task for products was to `convert_product_weights`.  This requires 
 - extraction of the unit of measure and the value of that unit into separate columns
 - conversion of the returned `weight` of the product standardised to kg, using a conversion mapping for other units of measure (g, oz, ml).
-- some products 'multiple items' where the weight is listed as "3 x 50g" or simimar.  In these cases, the `number_of_items` and the `item_weight` was determined by parsing the weight string, and the total weight of the product (the arithmetic product of these two values, converted to kg) was returned in the `weight` column.
+- some products are 'multiple items', where the weight of the product is listed as "3 x 50g" or similar.  In these cases, the `number_of_items` and the `item_weight` was determined by parsing the weight string to separate these elements, and the total weight of the product (the arithmetic product of these two values, converted to kg) was returned in the `weight` column.
 
 
 ## Orders Data
@@ -94,7 +94,7 @@ This requires an instance of a `DatabaseConnector` to supply the necessary crede
 
 The `read_rds_table` method in the `DataExtractor` was used to extract the data from the order table to a Pandas DataFrame.
 
-Order data are held as the 'single source of truth', and thus minimal cleaning was necessary (or desirable).  
+Order data are held as the 'single source of truth' for these data, and thus minimal cleaning was necessary (or desirable).  
 
 `DataCleaning` tasks for orders data were therefore limited to checking for duplicate entries, removing empty or duplicated columns, and removing personal data (customer names).
 
