@@ -1,23 +1,21 @@
 # Milestones 1 and 2
 &nbsp;
-
 ## Set up PostgreSQL Database for cleaned data
 A PostgreSQL database was set up to host the cleaned sales data. 
 
 &nbsp;
-
 ## Develop three classes for processing the data
 Three classes were developed, to carry out the necessary tasks related to processing of the raw data.
 
-`DatabaseConnector` 
+### `DatabaseConnector` 
 
 This includes methods for two stages of the data processing pipeline: 
 1. connection to source databases containing the raw data, allowing exploration of the tables in the source database and extraction of the data (see below)
 2. uploading cleaned data to the PostgreSQL database.
 
-&nbsp;
 
-`DataExtractor`
+
+### `DataExtractor`
 
 This includes methods to extract data from the different data sources. 
 
@@ -27,9 +25,9 @@ In some cases (where data are not held in a database requiring credentials, for 
 
 All extraction methods return a Pandas DataFrame for further processing.
 
-&nbsp;
 
-`DataCleaning`
+
+### `DataCleaning`
 
 This class contains methods to clean raw data prior to uploading.  
 
@@ -51,6 +49,7 @@ Key `DataCleaning` tasks for user data include:
 - processing of address data to remove line separation characters that had not formatted correctly in the text field
 - extraction of postcodes / zipcodes from the address column to a separate column, accounting for country-specific conventions.
 
+&nbsp;
 ## Card Data
 Card data was available from a PDF held in an Amazon S3 bucket (and available directly through a URL).
 
@@ -60,7 +59,7 @@ Key `DataCleaning` tasks for card data include:
 - separation of incorrectly concatenated data (card number and expiry date) back into separate columns
 - removal of text characters and white space used to pad card numbers, to allow conversion of the column to numeric.
 
-
+&nbsp;
 ## Store Data
 Store data was available from an API. 
 
@@ -73,7 +72,7 @@ Key `DataCleaning` tasks for store data include:
 - processing of opening date from text into a date variable with standardised formatting
 - extraction of postcodes / zipcodes from the address column to a separate column, accounting for country-specific conventions.
 
-
+&nbsp;
 ## Product Data
 Raw product data was held in an S3 bucket.
 
@@ -86,7 +85,7 @@ A specific cleaning task for products was to `convert_product_weights`.  This re
 - conversion of the returned `weight` of the product standardised to kg, using a conversion mapping for other units of measure (g, oz, ml).
 - some products are 'multiple items', where the weight of the product is listed as "3 x 50g" or similar.  In these cases, the `number_of_items` and the `item_weight` was determined by parsing the weight string to separate these elements, and the total weight of the product (the arithmetic product of these two values, converted to kg) was returned in the `weight` column.
 
-
+&nbsp;
 ## Orders Data
 Order data was also extracted from the Amazon RDS database holding user data. 
 
@@ -98,7 +97,7 @@ Order data are held as the 'single source of truth' for these data, and thus min
 
 `DataCleaning` tasks for orders data were therefore limited to checking for duplicate entries, removing empty or duplicated columns, and removing personal data (customer names).
 
-
+&nbsp;
 ## Date Events Data 
 
 Date events data were held in a `.json` file in an S3 bucket.
