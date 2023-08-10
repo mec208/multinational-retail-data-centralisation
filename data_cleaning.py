@@ -4,12 +4,22 @@
 import pandas as pd
 import numpy as np
 import re
-from itables import show
+
 
 
 #%%
 class DataCleaning():
-    """ Class Docstring """
+    """
+    Cleans Data from the Different Data Sources
+
+    - clean_user_data
+    - clean_card_data
+    - clean_store_data
+    - clean_product_data
+    - convert_product_weights:  converts weight of all products into kg
+    - clean_order_data
+    - clean_date_data
+    """
     def __init__(self):
         pass
 
@@ -23,7 +33,10 @@ class DataCleaning():
         # several rows have just CAPS and numbers  
         # e.g. indices 752, 1046, 2995, CA1XGS8GZW in several fields
         # identifiable because lacking '@' in email field
-        mask_at_symbol_in_email = df['email_address'].str.contains('@', na=False)
+        mask_at_symbol_in_email = (
+            df['email_address']
+            .str.contains('@', na=False)
+        )
         df = df.loc[mask_at_symbol_in_email]
         # Date
         # convert dates to datetime using pandas
@@ -32,11 +45,6 @@ class DataCleaning():
         # then specify uniform display format
         df['date_of_birth'] = df['date_of_birth'].dt.strftime('%d-%m-%Y')
         df['join_date'] = df['join_date'].dt.strftime('%d-%m-%Y')
-        # Address Issues 
-        # 1. "\n" used as separator, replace with ", "
-        df['address'] = df['address'].str.replace('\n', ', ')
-        # 2. Title case (capitalize each word)
-        df['address'] = df['address'].str.title()
         # Country Code 
         # Correct wrong entries in country code
         mask = df['country_code'] == "GGB"
@@ -44,24 +52,72 @@ class DataCleaning():
         df['country_code'].value_counts()
         # Use the 'map' method to create a new column with merged numeric values
         country_code_dictionary = {'US': 1, 'GB': 44, 'DE': 49}
-        df['numeric_country_code'] = df['country_code'].map(country_code_dictionary)
+        df['numeric_country_code'] = (
+            df['country_code']
+            .map(country_code_dictionary)
+        )
         # Phone Numbers
         # Remove country prefixes
-        df['phone_number'] = df['phone_number'].str.replace("+1", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace("+44", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace("+49", "", regex=False)
+        df['phone_number'] = (
+            df['phone_number']
+            .str.replace("+1", "", regex=False)
+            .str.replace("+44", "", regex=False)
+            .str.replace("+49", "", regex=False)
+        )
         # Remove parentheses, full stops / periods, dashes, blanks
-        df['phone_number'] = df['phone_number'].str.replace("(", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace(")", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace(".", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace("-", "", regex=False)
-        df['phone_number'] = df['phone_number'].str.replace(" ", "", regex=False)
+        df['phone_number'] = (
+            df['phone_number']
+            .str.replace("(", "", regex=False)
+            .str.replace(")", "", regex=False)
+            .str.replace(".", "", regex=False)
+            .str.replace("-", "", regex=False)
+            .str.replace(" ", "", regex=False)
+        )
         # Split Extensions to separate variable 
         df[['phone', 'extension']] = (
-            df['phone_number'].str.split(r'\s*x\s*|ext\s*', expand=True)
+            df['phone_number']
+            .str.split(r'\s*x\s*|ext\s*', expand=True)
         )
         df['phone_number'] = df['phone']
         df.drop(columns='phone', inplace=True)
+        # Address Issues 
+        # 1. "\n" used as separator, replace with ", "
+        df['address'] = df['address'].str.replace('\n', ', ')
+        # 2. Title case (capitalize each word)
+        df['address'] = df['address'].str.upper()
+                # UK postcodes
+        mask = df['country_code'] == "GB"
+        # Use regex to extract UK postcodes to new column
+        postcode_pattern = (
+            r'\b([A-Za-z]{1,2}\d{1,2}[A-Za-z]? \d[A-Za-z]{2})\b'
+        )
+        df.loc[mask, 'postcode'] = (
+            df.loc[mask, 'address']
+            .str.extract(postcode_pattern, expand=False)
+        )
+        df.loc[mask, 'postcode'] = (
+            df.loc[mask, 'postcode']
+            .str.upper()
+        )
+        # US/DE zipcodes
+        mask = df['country_code'].isin(['US', 'DE'])
+        # Use regex to extract UK postcodes to new column
+        postcode_pattern = r'\b(\d{5})\b'
+        df.loc[mask, 'postcode'] = (
+            df.loc[mask, 'address']
+            .str.extract(postcode_pattern, expand=False)
+        )
+        df.loc[mask, 'postcode'] = (
+            df.loc[mask, 'postcode'].str.upper()
+        )
+        # rename 'postcode' column to reflect new contents:
+        df = df.rename(columns={'postcode': 'postcode_zipcode'})
+        # Reorder cols - specify first 5
+        first_cols = ['first_name', 'last_name', 'date_of_birth', 
+                      'company', 'email_address', 'address', 
+                      'postcode_zipcode']
+        df = df[first_cols + [col for col in df.columns 
+                              if col not in first_cols]]
         return df
 
 
@@ -154,11 +210,13 @@ class DataCleaning():
         # 1. "\n" used as separator, replace with ", "
         df['address'] = df['address'].str.replace('\n', ', ')
         # 2. Title case (capitalize each word)
-        df['address'] = df['address'].str.title()
+        df['address'] = df['address'].str.upper()
         # UK postcodes
         mask = df['country_code'] == "GB"
         # Use regex to extract UK postcodes to new column
-        postcode_pattern = r'\b([A-Za-z]{1,2}\d{1,2}[A-Za-z]? \d[A-Za-z]{2})\b'
+        postcode_pattern = (
+            r'\b([A-Za-z]{1,2}\d{1,2}[A-Za-z]? \d[A-Za-z]{2})\b'
+        )
         df.loc[mask, 'postcode'] = (
             df.loc[mask, 'address']
             .str.extract(postcode_pattern, expand=False)
@@ -166,17 +224,6 @@ class DataCleaning():
         df.loc[mask, 'postcode'] = (
             df.loc[mask, 'postcode']
             .str.upper()
-        )
-       # Remove postcodes from the 'text' column
-        df.loc[mask, 'address'] = (
-            df.loc[mask, 'address']
-            .str.replace(postcode_pattern, '', regex=True)
-            .str.strip()
-        )
-        # Replace ", ," with ","
-        df.loc[mask, 'address'] = (
-            df.loc[mask, 'address']
-            .str.replace(", ,", ",", regex=False)
         )
         # US/DE zipcodes
         mask = df['country_code'].isin(['US', 'DE'])
@@ -188,17 +235,6 @@ class DataCleaning():
         )
         df.loc[mask, 'postcode'] = (
             df.loc[mask, 'postcode'].str.upper()
-        )
-        # Remove postcodes from the 'text' column
-        df.loc[mask, 'address'] = (
-            df.loc[mask, 'address']
-            .str.replace(postcode_pattern, '', regex=True)
-            .str.strip()
-        )
-        # Replace ", ," with ","
-        df.loc[mask, 'address'] = (
-            df.loc[mask, 'address']
-            .str.replace(", ,", ",", regex=False)
         )
         # rename 'postcode' column to reflect new contents:
         df = df.rename(columns={'postcode': 'postcode_zipcode'})
@@ -224,12 +260,26 @@ class DataCleaning():
         return df
 
 
+    def clean_product_data(self, df):
+        # remove rows with missing data in every column
+        df = df.dropna(how='all')
+        # Keep only the unique rows
+        df.duplicated().sum()
+        duplicates_mask = df.duplicated()
+        df = df.loc[~duplicates_mask]
+        #df.drop(df[duplicates_mask].index, inplace=True)
+        return df
+
+
     def convert_product_weights(self, df):
         # drop 3 rows with incorrect values
         mask = df['weight'].isin(["9GO9NZ5JTL", "MX180RYSHX", "Z8ZTDGUZVU"])
         df.drop(df[mask].index, inplace=True)
         # cleaning of incorrect values:
-        df.loc[:, 'weight'] = df.loc[:, 'weight'].str.replace('77g .', '77g', regex=False)
+        df.loc[:, 'weight'] = (
+            df.loc[:, 'weight']
+            .str.replace('77g .', '77g', regex=False)
+        )
         mask = df['product_name'].str.contains('Pleated Velvet Panel')
         df.loc[mask, 'weight'] = "1.160kg"
         # extract weight_value (last number in string) and weight units
@@ -243,10 +293,18 @@ class DataCleaning():
             .str.extract(r'([a-zA-Z]+)$')
         )
         # conversion units
-        unit_multipliers = {'g': 0.001, 'kg': 1.0, 'ml': 0.001, 'oz': 0.0283495}
-        df.loc[:, 'kg_multiplier'] = df.loc[:, 'weight_unit'].map(unit_multipliers)
+        unit_multipliers = (
+            {'g': 0.001, 'kg': 1.0, 'ml': 0.001, 'oz': 0.0283495}
+        )
+        df.loc[:, 'kg_multiplier'] = (
+            df.loc[:, 'weight_unit']
+            .map(unit_multipliers)
+        )
         # rows with x in are multiple items (3 x 50g or similar)  
-        df.loc[:, 'multiple_item'] = df.loc[:, 'weight'].str.contains('x', na=False)
+        df.loc[:, 'multiple_item'] = (
+            df.loc[:, 'weight']
+            .str.contains('x', na=False)
+        )
         multiple = df['weight'].str.contains('x', na=False)
         df.loc[:, 'number_of_items'] = (
             df.loc[:, 'weight']
@@ -263,8 +321,15 @@ class DataCleaning():
             * df.loc[multiple, 'item_weight']
         )
         df[multiple]
-        # generate weight, retain raw weight for reference in renamed variable
+        # retain raw weight variable for reference 
         df = df.rename(columns={'weight': 'raw_weight_field'})
+        last_col = 'raw_weight_field'
+        col_order = (
+            [col for col in df.columns if col != last_col] 
+            + [last_col]
+        )
+        df = df[col_order]
+        # generate weight in kg 
         df['weight'] = df['weight_value'] * df['kg_multiplier']
         # cleaning after conversion 
         # values <3g should have been listed as kg originally:
@@ -276,19 +341,11 @@ class DataCleaning():
         return df
 
 
-    def clean_products_data(self, df):
-        # remove rows with missing data in every column
-        df = df.dropna(how='all')
-        # Keep only the unique rows
-        df.duplicated().sum()
-        duplicates_mask = df.duplicated()
-        df = df.loc[~duplicates_mask]
-        #df.drop(df[duplicates_mask].index, inplace=True)
-        return df
-
-
-    def clean_orders_data(self, df):
-        df = df.drop(columns = ['level_0', 'first_name', 'last_name', '1'],  axis='column')
+    def clean_order_data(self, df):
+        df = df.drop(
+            columns = ['level_0', 'first_name', 'last_name', '1'],  
+            axis='column'
+        )
         print(f"df.shape:               {df.shape}")
         print(f"unique values in index: {df.index.nunique()}")
         print(f"number duplicated rows: {df.duplicated().sum()}")

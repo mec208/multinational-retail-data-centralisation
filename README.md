@@ -46,7 +46,7 @@ This requires an instance of a `DatabaseConnector` to supply the necessary crede
 The `read_rds_table` method in the `DataExtractor` was used to extract the data from the user table to a Pandas DataFrame.
 
 Key `DataCleaning` tasks for user data include:
-- cleaning an processsing of dates into a standard format
+- cleaning and processsing of dates into a standard format
 - processing of address data to remove line separation characters that had not formatted correctly in the text field
 - ?postcodes?
 - cleaning and standardisation of phone numbers from three countries into a standard format (separating country prefix and the in-country number)
