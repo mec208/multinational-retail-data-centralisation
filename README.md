@@ -1,8 +1,9 @@
 
 ## Table of Contents
 
-- [Milestones 1 and 2](#Milestones1and2)
-- [Milestone 3](#Milestone3)
+- [Milestones 1 and 2 - Set up Database; Extract and Clean Data using Data Processing Classes](#Milestones1and2)
+- [Milestone 3 - Updates to Database Tables and Creation of the Star-based Database Schema](#Milestone3)
+- [Milestone 4 - Querying the Data](#Milestone4)
 
 <a name="Milestones1and2"></a>
 # Milestones 1 and 2
@@ -119,7 +120,7 @@ The `retrieve_date_data` method in `DataExtractor` was used to extract these dat
 
 After the cleaned data was uploaded to the PostgreSQL database, the data base was edited as below:
 
-### Casting columns to correct data types
+## Casting columns to correct data types
 
 Key variables were cast to specific types as required. The full list of changes is documented in the files with the prefix 'correct_data_types_in...', for each of the 6 tables in the database.
 
@@ -150,3 +151,30 @@ Primary keys in the Dimension tables were created as follows:
 
 
 To complete the Star-based database schema, the Primary Keys in the above Dimension Tables were listed as Foreign Keys in the `orders_table`, referring to the appropriate dimension table.
+
+
+&nbsp;
+<a name="Milestone4"></a>
+# Milestone 4
+
+A series of queries were written in SQL to explore the data.  
+
+The SQL query files are those beginning with the prefix QUERY#..., and include: 
+
+| Query Number      | Query Details                                         | 
+|-------------------|-------------------------------------------------------|
+| 1                 |  Number of Stores by Country                          |
+| 2                 |  Number of Stores by Location (Locality)              |
+| 3                 |  Total Sales by calendar month of the year            |
+| 4                 |  Total Online and Offline Sales                       |
+| 5                 |  Total and Percentage of Sales by Store Type          |
+| 6                 |  Total Historical Sales by Year and Month             |
+| 7                 |  Total Staff Numbers by Country                       |
+| 8                 |  Total Sales by Store Type, within Germany            |
+| 9                 |  Average Time Interval Between Sales, by Year         |
+
+&nbsp;
+
+To show the logic of the query explicitly, and to allow for re-use of the code, some SQL files contain intermediate queries first, with the complete query as the last query in the file.  
+
+More Complex Queries e.g. Queries 4, 5 and 9 were implemented using Common Table Expressions (CTEs), as shown in the SQL files. 
