@@ -1,3 +1,10 @@
+
+## Table of Contents
+
+- [Milestones 1 and 2](#Milestones1and2)
+- [Milestone 3](#Milestone3)
+
+<a name="Milestones1and2"></a>
 # Milestones 1 and 2
 &nbsp;
 ## Set up PostgreSQL Database for cleaned data
@@ -106,5 +113,40 @@ The `retrieve_date_data` method in `DataExtractor` was used to extract these dat
 
 `DataCleaning` tasks involved creating a `datetime` object from 4 columns (timestamp, year, month, day) after removing rows where text had been entered in these columns in error.
 
+&nbsp;
+<a name="Milestone3"></a>
+# Milestone 3
+
+After the cleaned data was uploaded to the PostgreSQL database, the data base was edited as below:
+
+### Casting columns to correct data types
+
+Key variables were cast to specific types as required. The full list of changes is documented in the files with the prefix 'correct_data_types_in...', for each of the 6 tables in the database.
+
+- UUID variables were cast to UUID format.
+- Date variables to DATE format.
+- Numeric variables to FLOAT
+- In several instances, text variables were cast to the character-varying (VARCHAR) type. The maximum length of all the observations in that column was first determined, and the maximum length then used to specify the maximum number of characters.
+
+## Data manipulation in the products table
+
+Product prices were previously held as strings, with the '£' character as a prefix. This was stripped to allow conversion of the price to numeric.
+
+A human-readable 'weight class' variable was created from the calculated product weight, to aid decisions about delivery weights.
+
+## Creation of the star-based database schema
+
+The orders table is the central **Fact table**, with order tables as **Dimension tables**.
+
+Primary keys in the Dimension tables were created as follows:
+
+| Dimension Table   | Dimension Table Name    | Primary Key       | 
+|-------------------|-------------------------|-------------------|
+| Card Details      | `dim_card_details`      | `card_number`     |
+| Dates/Times       | `dim_date_times`        | `date_uuid`       |
+| Products          | `dim_products`          | `product_code`    |
+| Store Details     | `dim_store_details`     | `store_code`      |
+| Users             | `dim_users`             | `user_uuid`       |
 
 
+To complete the Star-based database schema, the Primary Keys in the above Dimension Tables were listed as Foreign Keys in the `orders_table`, referring to the appropriate dimension table.
